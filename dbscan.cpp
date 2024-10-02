@@ -6,6 +6,9 @@
 #include <vector>
 #include <cmath>
 #include <algorithm>
+#include <fstream>
+#include <sstream>
+#include <string>
 
 using namespace std;
 
@@ -44,36 +47,34 @@ vector<int> regionQuery(const vector<Point>& points, const Point& p, double eps)
 
 // Expand cluster
 bool expandCluster(vector<Point>& points, int pointIdx, int clusterId, double eps, unsigned minPts) {
-	cout << "Expand cluster" << endl;
-	
+    //cout << "Expand cluster" << endl;
+    
     vector<int> seeds = regionQuery(points, points[pointIdx], eps);
 
     if (seeds.size() < minPts) {
         points[pointIdx].clusterId = noice; // Mark as noice
-        cout << "  Point idx as noice: " << pointIdx << endl;
+        //cout << "  Point idx as noice: " << pointIdx << endl;
         return false;
     }
 
     for (int idx : seeds) {
         points[idx].clusterId = clusterId;
-        cout << "  Point seed idx: " << idx << " in clusterID: " << clusterId << endl;
+        //cout << "  Point seed idx: " << idx << " in clusterID: " << clusterId << endl;
     }
 
-    for (int idx : seeds) {
-        cout << "  Seed point idx before: " << idx << endl;
-    }
+    //for (int idx : seeds)
+    //    cout << "  Seed point idx before: " << idx << endl;
 
     seeds.erase(remove(seeds.begin(), seeds.end(), pointIdx), seeds.end());
     
-    for (int idx : seeds) {
-        cout << "  Seed point idx after: " << idx << endl;
-    }
+    //for (int idx : seeds)
+    //    cout << "  Seed point idx after: " << idx << endl;
 
     while (!seeds.empty()) {
         int currentP = seeds.back();
         seeds.pop_back();
 
-        cout << "    Remainng point idx: " << currentP << endl;
+        //cout << "    Remainng point idx: " << currentP << endl;
 
         if (!points[currentP].visited) {
             points[currentP].visited = true;
@@ -81,30 +82,28 @@ bool expandCluster(vector<Point>& points, int pointIdx, int clusterId, double ep
 
             if (result.size() >= minPts) {
                 seeds.insert(seeds.end(), result.begin(), result.end()); // Add new neighbors to list
-                for (int idx : seeds) {
-                    cout << "      Neighbor point idx: " << idx << endl;
-                }
+                //for (int idx : seeds)
+                //    cout << "      Neighbor point idx: " << idx << endl;
             }
             else {
-                for (int idx : result) {
-                    cout << "      No neighbor point idx: " << idx << endl;
-                }
+                //for (int idx : result)
+                //    cout << "      No neighbor point idx: " << idx << endl;
             }
         }
         else {
-            cout << "    Visited point idx: " << currentP << endl;
+            //cout << "    Visited point idx: " << currentP << endl;
         }
 
         if (points[currentP].clusterId == unexplored) {
             points[currentP].clusterId = clusterId; // Set to cluster if not yet explored
-            cout << "    Unexplored point idx: " << currentP << endl;
+            //cout << "    Unexplored point idx: " << currentP << endl;
         }
     }
     return true;
 }
 
 // Run DBSCAN algorithm
-void dbscan(vector<Point>& points, double eps, unsigned minPts) {
+void dbscan(vector<Point>& points, double eps, int minPts) {
     int clusterId = 0;
     for (unsigned i = 0; i < points.size(); ++i) {
         if (!points[i].visited) {
@@ -115,6 +114,31 @@ void dbscan(vector<Point>& points, double eps, unsigned minPts) {
             }
         }
     }
+}
+
+// Get sample data from CSV-file with semikolon as separator
+bool readCSV(const string& filename, vector<Point>& points) {
+    ifstream file(filename);
+    string line;
+
+    points.clear();
+
+    if (!file.is_open()) {
+        cerr << "Error with: " << filename << endl;
+        return false;
+    }
+
+    while (getline(file, line)) {
+        stringstream ss(line);
+        string xStr, yStr;
+        
+        if (getline(ss, xStr, ';') && getline(ss, yStr, ';')) {
+            points.emplace_back(stod(xStr), stod(yStr));
+        }
+    }
+    
+    file.close();
+    return true;
 }
 
 int main() {
@@ -129,9 +153,17 @@ int main() {
         Point( 5.0,  5.0)
     };
 
-	// The DBSCAN parameter
-    double eps = 1.5;
-    unsigned minPts = 2;
+    if (!readCSV("./smile_face.csv", points))
+        return -1;
+
+    // Output of read sample points
+    //for (const auto& p : points) {
+    //    cout << "Point (x = " << p.x << ", y = " << p.y << ")" << endl;
+    //}
+
+    // The DBSCAN parameter
+    double eps = 2;
+    unsigned minPts = 10;
 
     dbscan(points, eps, minPts);
     
