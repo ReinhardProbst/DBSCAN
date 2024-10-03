@@ -27,24 +27,22 @@ struct Point {
     Point(double x = 0, double y = 0) : x(x), y(y), clusterId(unexplored), visited(false) {}
 };
 
-// Get vector of points of X coordinate
+// Get vector of X coordinates from vector of points
 vector<double> getPointsX(const vector<Point>& points) {
     vector<double> pointsX;
 
-    for (const auto& p : points) {
+    for (const auto& p : points)
         pointsX.push_back(p.x);
-    }
 
     return pointsX;
 }
 
-// Get vector of points of Y coordinate
+// Get vector of Y coordinates from vector of points
 vector<double> getPointsY(const vector<Point>& points) {
     vector<double> pointsY;
 
-    for (const auto& p : points) {
+    for (const auto& p : points)
         pointsY.push_back(p.y);
-    }
 
     return pointsY;
 }
@@ -62,11 +60,13 @@ double distanceMan(const Point& a, const Point& b) {
 // Find all neighbors within epsilon distance
 vector<int> regionQuery(const vector<Point>& points, const Point& p, double eps) {
     vector<int> neighbors;
+
     for (unsigned i = 0; i < points.size(); ++i) {
-        if (distanceMan(p, points[i]) <= eps) { // Euclidean or Manhattan distance
+        if (distanceMan(p, points[i]) <= eps) { // Select Euclidean or Manhattan distance
             neighbors.push_back(i);
         }
     }
+
     return neighbors;
 }
 
@@ -79,7 +79,7 @@ bool expandCluster(vector<Point>& points, const int pointIdx, int& clusterId, co
     if (seeds.size() < minPts) {
         points[pointIdx].clusterId = noice; // Mark as noice
         //cout << "  Point idx as noice: " << pointIdx << endl;
-        --clusterId; // No new cluster created
+        --clusterId; // No new cluster created, decrease previously incremented clusterId
         return false;
     }
 
@@ -128,7 +128,7 @@ bool expandCluster(vector<Point>& points, const int pointIdx, int& clusterId, co
     return true;
 }
 
-// Run DBSCAN algorithm
+// DBSCAN algorithm
 int dbscan(vector<Point>& points, const double eps, int const minPts) {
     int clusterId = 0;
     for (unsigned i = 0; i < points.size(); ++i) {
@@ -166,6 +166,7 @@ bool readCSV(const string& filename, vector<Point>& points) {
     }
     
     file.close();
+
     return true;
 }
 
@@ -199,6 +200,7 @@ int main() {
     double eps = 2;
     unsigned minPts = 10;
 
+    // Run the DBSCAN algorithm
     int maxClusterId = dbscan(points, eps, minPts);
     
     cout << "Found max. cluster: " << maxClusterId << endl;
