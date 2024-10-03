@@ -103,6 +103,7 @@ bool expandCluster(vector<Point>& points, const int pointIdx, int& clusterId, co
 
             if (result.size() >= minPts) {
                 seeds.insert(seeds.end(), result.begin(), result.end()); // Add new neighbors to list
+                //cout << "      Found core point with idx: " << currentP << " x: " << points[currentP].x << " y: " << points[currentP].y << endl;
                 //for (int idx : seeds)
                 //    cout << "      Neighbor point idx: " << idx << endl;
             }
