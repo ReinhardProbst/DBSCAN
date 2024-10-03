@@ -54,3 +54,6 @@ dkms.conf
 
 # Documentation
 *.pdf
+
+# Visual Studio Code files
+.vscode/

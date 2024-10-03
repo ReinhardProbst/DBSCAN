@@ -2,6 +2,8 @@
 // Originally based on ChatGPT code creation
 */
 
+#include "matplotlibcpp.h"
+
 #include <iostream>
 #include <vector>
 #include <cmath>
@@ -10,6 +12,7 @@
 #include <sstream>
 #include <string>
 
+namespace plt = matplotlibcpp;
 using namespace std;
 
 // Used for marking clusters
@@ -23,6 +26,28 @@ struct Point {
 
     Point(double x = 0, double y = 0) : x(x), y(y), clusterId(unexplored), visited(false) {}
 };
+
+// Get vector of points of X coordinate
+vector<double> getPointsX(const vector<Point>& points) {
+    vector<double> pointsX;
+
+    for (const auto& p : points) {
+        pointsX.push_back(p.x);
+    }
+
+    return pointsX;
+}
+
+// Get vector of points of Y coordinate
+vector<double> getPointsY(const vector<Point>& points) {
+    vector<double> pointsY;
+
+    for (const auto& p : points) {
+        pointsY.push_back(p.y);
+    }
+
+    return pointsY;
+}
 
 // Euclidean distance
 double distance(const Point& a, const Point& b) {
@@ -46,7 +71,7 @@ vector<int> regionQuery(const vector<Point>& points, const Point& p, double eps)
 }
 
 // Expand cluster
-bool expandCluster(vector<Point>& points, int pointIdx, int clusterId, double eps, unsigned minPts) {
+bool expandCluster(vector<Point>& points, const int pointIdx, int& clusterId, const double eps, const unsigned minPts) {
     //cout << "Expand cluster" << endl;
     
     vector<int> seeds = regionQuery(points, points[pointIdx], eps);
@@ -54,6 +79,7 @@ bool expandCluster(vector<Point>& points, int pointIdx, int clusterId, double ep
     if (seeds.size() < minPts) {
         points[pointIdx].clusterId = noice; // Mark as noice
         //cout << "  Point idx as noice: " << pointIdx << endl;
+        --clusterId; // No new cluster created
         return false;
     }
 
@@ -103,17 +129,19 @@ bool expandCluster(vector<Point>& points, int pointIdx, int clusterId, double ep
 }
 
 // Run DBSCAN algorithm
-void dbscan(vector<Point>& points, double eps, int minPts) {
+int dbscan(vector<Point>& points, const double eps, int const minPts) {
     int clusterId = 0;
     for (unsigned i = 0; i < points.size(); ++i) {
         if (!points[i].visited) {
             points[i].visited = true;
 
             if (expandCluster(points, i, ++clusterId, eps, minPts)) {
-                // New cluster found and expanded
+                cout << "New cluster found and expanded: " << clusterId << endl;
             }
         }
     }
+
+    return clusterId;
 }
 
 // Get sample data from CSV-file with semikolon as separator
@@ -161,17 +189,25 @@ int main() {
     //    cout << "Point (x = " << p.x << ", y = " << p.y << ")" << endl;
     //}
 
+    vector<double> x = getPointsX(points);
+    vector<double> y = getPointsY(points);
+
+    plt::figure_size(1000, 1000);
+    plt::plot(x, y, "bx");
+
     // The DBSCAN parameter
     double eps = 2;
     unsigned minPts = 10;
 
-    dbscan(points, eps, minPts);
+    int maxClusterId = dbscan(points, eps, minPts);
     
-    cout << endl;
+    cout << "Found max. cluster: " << maxClusterId << endl;
 
     for (const auto& p : points) {
         cout << "Point (" << p.x << ", " << p.y << ") - Cluster ID: " << p.clusterId << endl;
     }
+
+    plt::show();
 
     return 0;
 }

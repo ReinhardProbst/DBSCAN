@@ -1,10 +1,11 @@
-CPPFLAGS        = --std=c++23 -Ofast -fdiagnostics-color=always -Wfatal-errors -Wall
-
+CPPFLAGS        = --std=c++23 -Ofast -fdiagnostics-color=always -Wfatal-errors -Wall \
+                  -I/usr/include/python3.12 \
+                  -I/usr/lib/python3/dist-packages/numpy/core/include
                    
 #Enable if e.g. custom boost, rapidjson, fmt or tbb include dir
-#CPPFLAGSCUSTOM  = -I/opt/local/include
+CPPFLAGSCUSTOM  = -I/opt/local/include/matplotlibcpp
 
-#LDLIBS          = -lboost_system -lboost_chrono -lboost_thread -lpthread -ltbb -lstdc++fs
+LDLIBS          = -lpython3.12
 
 #Enable if e.g. custom boost, rapidjson, fmt or tbb lib dir
 #LDFLAGSCUSTOM   = -L/opt/local/lib
@@ -22,7 +23,7 @@ help:
 	@$(ECHO) "make clean"
 
 $(TARGET): $(FILES)
-	$(CXX) $(CPPFLAGS) -o $@ $?
+	$(CXX) $(CPPFLAGS) $(CPPFLAGSCUSTOM) $(LDFLAGS) $(LDFLAGSCUSTOM) -o $@ $? $(LDLIBS)
 
 clean:
 	-$(RM) $(TARGET)
