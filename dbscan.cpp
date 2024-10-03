@@ -28,23 +28,21 @@ struct Point {
 };
 
 // Get vector of X coordinates from vector of points
-vector<double> getPointsX(const vector<Point>& points) {
-    vector<double> pointsX;
-
-    for (const auto& p : points)
-        pointsX.push_back(p.x);
-
-    return pointsX;
+vector<double> extractXCoordinates(const vector<Point>& points) {
+    vector<double> xCoordinates;
+    
+    transform(points.begin(), points.end(), back_inserter(xCoordinates), [](const Point& p) { return p.x; });
+    
+    return xCoordinates;
 }
 
 // Get vector of Y coordinates from vector of points
-vector<double> getPointsY(const vector<Point>& points) {
-    vector<double> pointsY;
-
-    for (const auto& p : points)
-        pointsY.push_back(p.y);
-
-    return pointsY;
+vector<double> extractYCoordinates(const vector<Point>& points) {
+    vector<double> yCoordinates;
+    
+    transform(points.begin(), points.end(), back_inserter(yCoordinates), [](const Point& p) { return p.y; });
+    
+    return yCoordinates;
 }
 
 // Euclidean distance
@@ -83,10 +81,7 @@ bool expandCluster(vector<Point>& points, const int pointIdx, int& clusterId, co
         return false;
     }
 
-    for (int idx : seeds) {
-        points[idx].clusterId = clusterId;
-        //cout << "  Point seed idx: " << idx << " in clusterID: " << clusterId << endl;
-    }
+    for_each(seeds.begin(), seeds.end(), [clusterId, &points](int idx) { points[idx].clusterId = clusterId; });
 
     //for (int idx : seeds)
     //    cout << "  Seed point idx before: " << idx << endl;
@@ -170,6 +165,15 @@ bool readCSV(const string& filename, vector<Point>& points) {
     return true;
 }
 
+// Filter out points by clusterId
+vector<Point> filterPointsByClusterId(const vector<Point>& points, int targetClusterId) {
+    vector<Point> result;
+    
+    copy_if(points.begin(), points.end(), back_inserter(result), [targetClusterId](const Point& p) { return p.clusterId == targetClusterId; });
+    
+    return result;
+}
+
 int main() {
     // Sample points
     vector<Point> points = {
@@ -190,23 +194,43 @@ int main() {
     //    cout << "Point (x = " << p.x << ", y = " << p.y << ")" << endl;
     //}
 
-    vector<double> x = getPointsX(points);
-    vector<double> y = getPointsY(points);
+    vector<double> x = extractXCoordinates(points);
+    vector<double> y = extractYCoordinates(points);
 
     plt::figure_size(1000, 1000);
-    plt::plot(x, y, "bx");
+    plt::title("Sample points");
+    plt::plot(x, y, "bo");
 
     // The DBSCAN parameter
     double eps = 2;
-    unsigned minPts = 10;
+    unsigned minPts = 5;
 
     // Run the DBSCAN algorithm
     int maxClusterId = dbscan(points, eps, minPts);
+
+    cout << endl;
     
     cout << "Found max. cluster: " << maxClusterId << endl;
 
+    cout << endl;
+
     for (const auto& p : points) {
         cout << "Point (" << p.x << ", " << p.y << ") - Cluster ID: " << p.clusterId << endl;
+    }
+
+    cout << endl;
+
+    for (int id = 0; id <= maxClusterId; ++id) {
+        vector<Point> filteredPoints = filterPointsByClusterId(points, id);
+
+        cout << "Cluster " << id << " size: " << filteredPoints.size() << endl;
+
+        vector<double> x = extractXCoordinates(filteredPoints);
+        vector<double> y = extractYCoordinates(filteredPoints);
+
+        plt::figure_size(1000, 1000);
+        plt::title(string("Cluster ID: ") + to_string(id));
+        plt::plot(x, y, "ro");
     }
 
     plt::show();
