@@ -11,6 +11,7 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <concepts>
 
 namespace plt = matplotlibcpp;
 using namespace std;
@@ -19,44 +20,53 @@ using namespace std;
 constexpr int unexplored = -1;
 constexpr int noice = 0;;
 
+template <typename T>
+concept Arithmetic = std::is_arithmetic_v<T>;
+
+template <Arithmetic T>
 struct Point {
-    double x, y;
+    T x, y;
     int clusterId; // "unexplored", "noice", 1.. means clusterID
     bool visited;  // "false", "true"
 
-    Point(double x = 0, double y = 0) : x(x), y(y), clusterId(unexplored), visited(false) {}
+    Point(T x = 0, T y = 0) : x(x), y(y), clusterId(unexplored), visited(false) {}
 };
 
 // Get vector of X coordinates from vector of points
-vector<double> extractXCoordinates(const vector<Point>& points) {
-    vector<double> xCoordinates;
+template <Arithmetic T>
+vector<T> extractXCoordinates(const vector<Point<T>>& points) {
+    vector<T> xCoordinates;
     
-    transform(points.begin(), points.end(), back_inserter(xCoordinates), [](const Point& p) { return p.x; });
+    transform(points.begin(), points.end(), back_inserter(xCoordinates), [](const Point<T>& p) { return p.x; });
     
     return xCoordinates;
 }
 
 // Get vector of Y coordinates from vector of points
-vector<double> extractYCoordinates(const vector<Point>& points) {
-    vector<double> yCoordinates;
+template <Arithmetic T>
+vector<T> extractYCoordinates(const vector<Point<T>>& points) {
+    vector<T> yCoordinates;
     
-    transform(points.begin(), points.end(), back_inserter(yCoordinates), [](const Point& p) { return p.y; });
+    transform(points.begin(), points.end(), back_inserter(yCoordinates), [](const Point<T>& p) { return p.y; });
     
     return yCoordinates;
 }
 
 // Euclidean distance
-double distance(const Point& a, const Point& b) {
+template <Arithmetic T>
+T distance(const Point<T>& a, const Point<T>& b) {
     return sqrt(pow(a.x - b.x, 2) + pow(a.y - b.y, 2));
 }
 
 // Manhattan distance
-double distanceMan(const Point& a, const Point& b) {
+template <Arithmetic T>
+T distanceMan(const Point<T>& a, const Point<T>& b) {
     return abs(a.x - b.x) + abs(a.y - b.y);
 }
 
 // Find all neighbors within epsilon distance
-vector<int> regionQuery(const vector<Point>& points, const Point& p, double eps) {
+template <Arithmetic T>
+vector<int> regionQuery(const vector<Point<T>>& points, const Point<T>& p, T eps) {
     vector<int> neighbors;
 
     for (unsigned i = 0; i < points.size(); ++i) {
@@ -69,7 +79,8 @@ vector<int> regionQuery(const vector<Point>& points, const Point& p, double eps)
 }
 
 // Expand cluster
-bool expandCluster(vector<Point>& points, const int pointIdx, int& clusterId, const double eps, const unsigned minPts) {
+template <Arithmetic T>
+bool expandCluster(vector<Point<T>>& points, const int pointIdx, int& clusterId, const T eps, const unsigned minPts) {
     //cout << "Expand cluster" << endl;
     
     vector<int> seeds = regionQuery(points, points[pointIdx], eps);
@@ -125,7 +136,8 @@ bool expandCluster(vector<Point>& points, const int pointIdx, int& clusterId, co
 }
 
 // DBSCAN algorithm
-int dbscan(vector<Point>& points, const double eps, int const minPts) {
+template <Arithmetic T>
+int dbscan(vector<Point<T>>& points, const T eps, int const minPts) {
     int clusterId = 0;
     for (unsigned i = 0; i < points.size(); ++i) {
         if (!points[i].visited) {
@@ -140,8 +152,24 @@ int dbscan(vector<Point>& points, const double eps, int const minPts) {
     return clusterId;
 }
 
+template <Arithmetic T>
+T convStr(const std::string& str) {
+    if constexpr (std::is_same_v<T, int>) {
+        return std::stoi(str);
+    } else if constexpr (std::is_same_v<T, double>) {
+        return std::stod(str);
+    } else if constexpr (std::is_same_v<T, long>) {
+        return std::stol(str);
+    } else if constexpr (std::is_same_v<T, float>) {
+        return std::stof(str);
+    } else {
+        static_assert(std::is_arithmetic_v<T>, "Unsupported type for conversion");
+    }
+}
+
 // Get sample data from CSV-file with semikolon as separator
-bool readCSV(const string& filename, vector<Point>& points) {
+template <Arithmetic T>
+bool readCSV(const string& filename, vector<Point<T>>& points) {
     ifstream file(filename);
     string line;
 
@@ -157,7 +185,7 @@ bool readCSV(const string& filename, vector<Point>& points) {
         string xStr, yStr;
         
         if (getline(ss, xStr, ';') && getline(ss, yStr, ';')) {
-            points.emplace_back(stod(xStr), stod(yStr));
+            points.emplace_back(convStr<T>(xStr), convStr<T>(yStr));
         }
     }
     
@@ -167,17 +195,18 @@ bool readCSV(const string& filename, vector<Point>& points) {
 }
 
 // Filter out points by clusterId
-vector<Point> filterPointsByClusterId(const vector<Point>& points, int targetClusterId) {
-    vector<Point> result;
+template <Arithmetic T>
+vector<Point<T>> filterPointsByClusterId(const vector<Point<T>>& points, int targetClusterId) {
+    vector<Point<T>> result;
     
-    copy_if(points.begin(), points.end(), back_inserter(result), [targetClusterId](const Point& p) { return p.clusterId == targetClusterId; });
+    copy_if(points.begin(), points.end(), back_inserter(result), [targetClusterId](const Point<T>& p) { return p.clusterId == targetClusterId; });
     
     return result;
 }
 
 int main() {
     // Sample points
-    vector<Point> points = {
+    vector<Point<double>> points = {
         Point( 1.0,  1.0),
         Point( 1.1,  1.1),
         Point( 0.9,  0.9),
@@ -187,24 +216,34 @@ int main() {
         Point( 5.0,  5.0)
     };
 
+    // vector<Point<int>> points = {
+    //     Point( 1,  1),
+    //     Point( 2,  2),
+    //     Point( 3,  3),
+    //     Point(10, 10),
+    //     Point(11, 11),
+    //     Point( 9,  9),
+    //     Point( 6,  6)
+    // };
+
     if (!readCSV("./smile_face.csv", points))
-        return -1;
+       return -1;
 
     // Output of read sample points
     //for (const auto& p : points) {
     //    cout << "Point (x = " << p.x << ", y = " << p.y << ")" << endl;
     //}
 
-    vector<double> x = extractXCoordinates(points);
-    vector<double> y = extractYCoordinates(points);
+    auto x = extractXCoordinates(points);
+    auto y = extractYCoordinates(points);
 
     plt::figure_size(1000, 1000);
     plt::title("Sample points");
     plt::plot(x, y, "bo");
 
     // The DBSCAN parameter
-    double eps = 2;
-    unsigned minPts = 5;
+    /*int*/ double eps = 2;
+    unsigned minPts = 13;
 
     // Run the DBSCAN algorithm
     int maxClusterId = dbscan(points, eps, minPts);
@@ -222,12 +261,12 @@ int main() {
     cout << endl;
 
     for (int id = 0; id <= maxClusterId; ++id) {
-        vector<Point> filteredPoints = filterPointsByClusterId(points, id);
+        auto filteredPoints = filterPointsByClusterId(points, id);
 
         cout << "Cluster " << id << " size: " << filteredPoints.size() << endl;
 
-        vector<double> x = extractXCoordinates(filteredPoints);
-        vector<double> y = extractYCoordinates(filteredPoints);
+        auto x = extractXCoordinates(filteredPoints);
+        auto y = extractYCoordinates(filteredPoints);
 
         plt::figure_size(1000, 1000);
         plt::title(string("Cluster ID: ") + to_string(id));
