@@ -1,4 +1,7 @@
 #include <matplotlibcpp.h>
+
+#include <boost/timer/timer.hpp>
+
 #include "dbscan.hpp"
 
 namespace plt = matplotlibcpp;
@@ -57,10 +60,12 @@ int main() {
 
     // The DBSCAN parameter
     number_t eps = 2;
-    unsigned minPts = 13;
+    unsigned minPts = 13;    
 
-    // Run the DBSCAN algorithm
+    // Run the DBSCAN algorithm incl. benchmark
+    boost::timer::auto_cpu_timer ac;
     int maxClusterId = Dbscan.dbscan(points, eps, minPts);
+    ac.report();
 
     std::cout << std::endl;
     
@@ -68,11 +73,11 @@ int main() {
 
     std::cout << std::endl;
 
-    for (const auto& p : points) {
-        std::cout << "Point (" << p.x << ", " << p.y << ") - Cluster ID: " << p.clusterId << std::endl;
-    }
+    // for (const auto& p : points) {
+    //     std::cout << "Point (" << p.x << ", " << p.y << ") - Cluster ID: " << p.clusterId << std::endl;
+    // }
 
-    std::cout << std::endl;
+    // std::cout << std::endl;
 
     for (int id = 0; id <= maxClusterId; ++id) {
         auto filteredPoints = Dbscan.filterPointsByClusterId(points, id);

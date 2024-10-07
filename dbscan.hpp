@@ -142,7 +142,7 @@ struct DBSCAN {
                 points[i].visited = true;
 
                 if (expandCluster(points, i, ++clusterId, eps, minPts)) {
-                    std::cout << "New cluster found and expanded: " << clusterId << std::endl;
+                    //std::cout << "New cluster found and expanded: " << clusterId << std::endl;
                 }
             }
         }
