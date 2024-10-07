@@ -3,14 +3,15 @@ CPPFLAGS        = --std=c++23 -Ofast -fdiagnostics-color=always -Wfatal-errors -
                   -I/usr/lib/python3/dist-packages/numpy/core/include
                    
 #Enable if e.g. custom boost, rapidjson, fmt or tbb include dir
-CPPFLAGSCUSTOM  = -I/opt/local/include/matplotlibcpp
+CPPFLAGSCUSTOM  = -I/opt/local/include/matplotlibcpp \
+                  -iquote ./
 
-LDLIBS          = -lpython3.12
+LDLIBS          = -lpython3.12 -lboost_timer
 
 #Enable if e.g. custom boost, rapidjson, fmt or tbb lib dir
 #LDFLAGSCUSTOM   = -L/opt/local/lib
 
-FILES           = dbscan.cpp
+FILES           = main.cpp
 TARGET          = dbscan
 STRIP           = strip -s
 ECHO            = echo
