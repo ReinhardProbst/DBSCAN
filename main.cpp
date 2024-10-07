@@ -1,27 +1,28 @@
-/*
-// Originally based on ChatGPT code creation
-*/
-
 #include <matplotlibcpp.h>
 #include "dbscan.hpp"
 
 namespace plt = matplotlibcpp;
 
+// Choose the number type, typ. float, double or int
+using number_t = double;
+
 int main() {
     DBSCAN Dbscan;
 
-    // Sample points
-    std::vector<DBSCAN::Point<double>> points = {
-        DBSCAN::Point( 1.0,  1.0),
-        DBSCAN::Point( 1.1,  1.1),
-        DBSCAN::Point( 0.9,  0.9),
-        DBSCAN::Point(10.0, 10.0),
-        DBSCAN::Point(10.1, 10.1),
-        DBSCAN::Point( 9.9,  9.9),
-        DBSCAN::Point( 5.0,  5.0)
-    };
+    std::vector<DBSCAN::Point<number_t>> points;
 
-    // vector<DBSCAN::Point<int>> points = {
+    // // Sample points
+    // std::vector<DBSCAN::Point<number_t>> points = {
+    //     DBSCAN::Point( 1.0,  1.0),
+    //     DBSCAN::Point( 1.1,  1.1),
+    //     DBSCAN::Point( 0.9,  0.9),
+    //     DBSCAN::Point(10.0, 10.0),
+    //     DBSCAN::Point(10.1, 10.1),
+    //     DBSCAN::Point( 9.9,  9.9),
+    //     DBSCAN::Point( 5.0,  5.0)
+    // };
+
+    // std::vector<DBSCAN::Point<number_t>> points = {
     //     DBSCAN::Point( 1,  1),
     //     DBSCAN::Point( 2,  2),
     //     DBSCAN::Point( 3,  3),
@@ -31,7 +32,15 @@ int main() {
     //     DBSCAN::Point( 6,  6)
     // };
 
-    if (!Dbscan.readCSV("./smile_face.csv", points))
+    std::string fn;
+
+    if constexpr (std::is_same_v<number_t, int>) {
+        fn = "./smile_face_int.csv";
+    } else if constexpr (std::is_same_v<number_t, double>) {
+        fn = "./smile_face_double.csv";
+    }
+
+    if (!Dbscan.readCSV(fn, points))
        return -1;
 
     // Output of read sample points
@@ -47,7 +56,7 @@ int main() {
     plt::plot(x, y, "bo");
 
     // The DBSCAN parameter
-    /*int*/ double eps = 2;
+    number_t eps = 2;
     unsigned minPts = 13;
 
     // Run the DBSCAN algorithm
