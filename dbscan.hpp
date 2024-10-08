@@ -12,7 +12,7 @@
 #include <concepts>
 
 template <typename T>
-concept Arithmetic = std::is_arithmetic_v<T>;
+concept Arithmetic = std::is_same_v<T, int> || std::is_same_v<T, long> || std::is_same_v<T, float> || std::is_same_v<T, double>;
 
 struct DBSCAN {
     DBSCAN() = default;
@@ -154,14 +154,14 @@ struct DBSCAN {
     T convStr(const std::string& str) {
         if constexpr (std::is_same_v<T, int>) {
             return std::stoi(str);
-        } else if constexpr (std::is_same_v<T, double>) {
-            return std::stod(str);
         } else if constexpr (std::is_same_v<T, long>) {
             return std::stol(str);
         } else if constexpr (std::is_same_v<T, float>) {
             return std::stof(str);
+        } else if constexpr (std::is_same_v<T, double>) {
+            return std::stod(str);
         } else {
-            static_assert(std::is_arithmetic_v<T>, "Unsupported type for conversion");
+            // Unsupported type, detected by compiler via concept<Aritmetic>
         }
     }
 

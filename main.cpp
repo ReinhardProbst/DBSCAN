@@ -6,7 +6,7 @@
 
 namespace plt = matplotlibcpp;
 
-// Choose the number type, typ. float, double or int
+// Choose the number type, implemented are float, double, int or long
 using number_t = double;
 
 int main() {
@@ -35,12 +35,23 @@ int main() {
     //     DBSCAN::Point( 6,  6)
     // };
 
-    std::string fn;
+    std::string fn = "";
+    number_t eps = 0;
+    unsigned minPts = 0; 
 
-    if constexpr (std::is_same_v<number_t, int>) {
+    if constexpr (std::is_same_v<number_t, int> || std::is_same_v<number_t, long>) {
         fn = "./smile_face_int.csv";
-    } else if constexpr (std::is_same_v<number_t, double>) {
+        // The DBSCAN parameter
+        eps = 15;
+        minPts = 13; 
+    } else if constexpr (std::is_same_v<number_t, float> || std::is_same_v<number_t, double>) {
         fn = "./smile_face_double.csv";
+        // The DBSCAN parameter
+        eps = 2.0;
+        minPts = 13; 
+    } else {
+        std::cout << "Unsupported data type for DBSCAN algorithm" << std::endl;
+        return -1;
     }
 
     if (!Dbscan.readCSV(fn, points))
@@ -48,7 +59,7 @@ int main() {
 
     // Output of read sample points
     //for (const auto& p : points) {
-    //    cout << "Point (x = " << p.x << ", y = " << p.y << ")" << endl;
+    //    std::cout << "Point (x = " << p.x << ", y = " << p.y << ")" << std::endl;
     //}
 
     auto x = Dbscan.extractXCoordinates(points);
@@ -57,10 +68,6 @@ int main() {
     plt::figure_size(1000, 1000);
     plt::title("Sample points");
     plt::plot(x, y, "bo");
-
-    // The DBSCAN parameter
-    number_t eps = 2;
-    unsigned minPts = 13;    
 
     // Run the DBSCAN algorithm incl. benchmark
     boost::timer::auto_cpu_timer ac;

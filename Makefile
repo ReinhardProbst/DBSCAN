@@ -16,7 +16,7 @@ TARGET          = dbscan
 STRIP           = strip -s
 ECHO            = echo
 
-.PHONY: help clean ctags
+.PHONY: help clean #ctags
 
 help:
 	@$(ECHO) "Available targets are:"
